@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"syscall"
+	"time"
 )
 
 // hideConsoleWindow hides the console window for a command on Windows.
@@ -60,11 +61,29 @@ func convertHTMLToPDFPlatform(htmlPath string, pdfPath string) error {
 		// Fallback without user-data-dir if temp dir creation fails
 		cmd := exec.Command(edgePath, "--headless", "--disable-gpu", "--no-sandbox", "--print-to-pdf="+pdfPath, htmlPath)
 		hideConsoleWindow(cmd)
-		return cmd.Run()
+		errRun := cmd.Run()
+		if errRun != nil {
+			return errRun
+		}
+	} else {
+		defer os.RemoveAll(tempDir)
+		cmd := exec.Command(edgePath, "--headless", "--disable-gpu", "--no-sandbox", "--no-first-run", "--no-default-browser-check", "--user-data-dir="+tempDir, "--print-to-pdf="+pdfPath, htmlPath)
+		hideConsoleWindow(cmd)
+		errRun := cmd.Run()
+		if errRun != nil {
+			return errRun
+		}
 	}
-	defer os.RemoveAll(tempDir)
 
-	cmd := exec.Command(edgePath, "--headless", "--disable-gpu", "--no-sandbox", "--no-first-run", "--no-default-browser-check", "--user-data-dir="+tempDir, "--print-to-pdf="+pdfPath, htmlPath)
-	hideConsoleWindow(cmd)
-	return cmd.Run()
+	// Because Edge launcher might exit immediately (process merging), we poll and wait for the PDF file to be created and contain data
+	for i := 0; i < 50; i++ {
+		if info, err := os.Stat(pdfPath); err == nil && info.Size() > 0 {
+			// Give it a tiny extra time to release file locks
+			time.Sleep(300 * time.Millisecond)
+			return nil
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	return fmt.Errorf("timeout waiting for PDF generation by headless browser")
 }

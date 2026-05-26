@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"time"
 )
 
 // hideConsoleWindow is a no-op on non-Windows systems since they do not experience flashing console windows.
@@ -70,10 +71,28 @@ func convertHTMLToPDFPlatform(htmlPath string, pdfPath string) error {
 	if err != nil {
 		// Fallback without user-data-dir if temp dir creation fails
 		cmd := exec.Command(browserPath, "--headless", "--disable-gpu", "--no-sandbox", "--print-to-pdf="+pdfPath, htmlPath)
-		return cmd.Run()
+		errRun := cmd.Run()
+		if errRun != nil {
+			return errRun
+		}
+	} else {
+		defer os.RemoveAll(tempDir)
+		cmd := exec.Command(browserPath, "--headless", "--disable-gpu", "--no-sandbox", "--no-first-run", "--no-default-browser-check", "--user-data-dir="+tempDir, "--print-to-pdf="+pdfPath, htmlPath)
+		errRun := cmd.Run()
+		if errRun != nil {
+			return errRun
+		}
 	}
-	defer os.RemoveAll(tempDir)
 
-	cmd := exec.Command(browserPath, "--headless", "--disable-gpu", "--no-sandbox", "--no-first-run", "--no-default-browser-check", "--user-data-dir="+tempDir, "--print-to-pdf="+pdfPath, htmlPath)
-	return cmd.Run()
+	// Because browser launcher might exit immediately (process merging), we poll and wait for the PDF file to be created and contain data
+	for i := 0; i < 50; i++ {
+		if info, err := os.Stat(pdfPath); err == nil && info.Size() > 0 {
+			// Give it a tiny extra time to release file locks
+			time.Sleep(300 * time.Millisecond)
+			return nil
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	return fmt.Errorf("timeout waiting for PDF generation by headless browser")
 }
