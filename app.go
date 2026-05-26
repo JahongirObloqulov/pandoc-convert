@@ -99,7 +99,15 @@ func (a *App) CheckPandocInstalled() bool {
 // Pandoc buyrug'ini ishga tushirish
 func (a *App) ConvertFile(inputFile string, outputFile string) string {
 	path := a.getPandocPath()
-	cmd := exec.Command(path, inputFile, "-o", outputFile)
+
+	args := []string{inputFile, "-o", outputFile}
+	ext := filepath.Ext(outputFile)
+	if ext == ".html" || ext == ".htm" {
+		// Standalone HTML fayl yaratish va formulalarni MathML formatida oflayn va chiroyli ko'rsatish
+		args = append(args, "-s", "--mathml")
+	}
+
+	cmd := exec.Command(path, args...)
 	hideConsoleWindow(cmd)
 
 	// Xatoliklarni ushlab olish
