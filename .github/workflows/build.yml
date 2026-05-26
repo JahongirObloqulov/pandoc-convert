@@ -67,10 +67,11 @@ jobs:
         if: matrix.platform == 'windows'
         shell: pwsh
         run: |
+          choco install nsis -y
           curl.exe -L -o pandoc.zip "https://github.com/jgm/pandoc/releases/download/3.9/pandoc-3.9-windows-x86_64.zip"
           Expand-Archive -Path pandoc.zip -DestinationPath pandoc-extracted
           Get-ChildItem -Path "pandoc-extracted" -Filter "pandoc.exe" -Recurse | Copy-Item -Destination "build\bin\"
-          makensis installer.nsi
+          & "C:\Program Files (x86)\NSIS\makensis.exe" installer.nsi
 
       # macOS uchun Pandoc'ni yuklab olish va App bundle ichiga joylashtirib, zip qilish
       - name: Bundle Pandoc for macOS
