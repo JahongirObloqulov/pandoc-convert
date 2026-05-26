@@ -59,7 +59,7 @@ func convertHTMLToPDFPlatform(htmlPath string, pdfPath string) error {
 	tempDir, err := os.MkdirTemp("", "pandoc-pro-pdf-*")
 	if err != nil {
 		// Fallback without user-data-dir if temp dir creation fails
-		cmd := exec.Command(edgePath, "--headless", "--disable-gpu", "--no-sandbox", "--print-to-pdf="+pdfPath, htmlPath)
+		cmd := exec.Command(edgePath, "--headless", "--disable-gpu", "--no-sandbox", "--no-header-footer", "--print-to-pdf="+pdfPath, htmlPath)
 		hideConsoleWindow(cmd)
 		errRun := cmd.Run()
 		if errRun != nil {
@@ -67,7 +67,7 @@ func convertHTMLToPDFPlatform(htmlPath string, pdfPath string) error {
 		}
 	} else {
 		defer os.RemoveAll(tempDir)
-		cmd := exec.Command(edgePath, "--headless", "--disable-gpu", "--no-sandbox", "--no-first-run", "--no-default-browser-check", "--user-data-dir="+tempDir, "--print-to-pdf="+pdfPath, htmlPath)
+		cmd := exec.Command(edgePath, "--headless", "--disable-gpu", "--no-sandbox", "--no-first-run", "--no-default-browser-check", "--no-header-footer", "--user-data-dir="+tempDir, "--print-to-pdf="+pdfPath, htmlPath)
 		hideConsoleWindow(cmd)
 		errRun := cmd.Run()
 		if errRun != nil {
