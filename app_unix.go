@@ -65,6 +65,15 @@ func convertHTMLToPDFPlatform(htmlPath string, pdfPath string) error {
 		return fmt.Errorf("no headless browser found on macOS/Linux")
 	}
 
-	cmd := exec.Command(browserPath, "--headless", "--disable-gpu", "--no-sandbox", "--print-to-pdf="+pdfPath, htmlPath)
+	// Create a temporary directory for user data to isolate the process
+	tempDir, err := os.MkdirTemp("", "pandoc-pro-pdf-*")
+	if err != nil {
+		// Fallback without user-data-dir if temp dir creation fails
+		cmd := exec.Command(browserPath, "--headless", "--disable-gpu", "--no-sandbox", "--print-to-pdf="+pdfPath, htmlPath)
+		return cmd.Run()
+	}
+	defer os.RemoveAll(tempDir)
+
+	cmd := exec.Command(browserPath, "--headless", "--disable-gpu", "--no-sandbox", "--no-first-run", "--no-default-browser-check", "--user-data-dir="+tempDir, "--print-to-pdf="+pdfPath, htmlPath)
 	return cmd.Run()
 }

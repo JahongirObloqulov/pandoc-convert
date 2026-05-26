@@ -54,7 +54,17 @@ func convertHTMLToPDFPlatform(htmlPath string, pdfPath string) error {
 		}
 	}
 
-	cmd := exec.Command(edgePath, "--headless", "--disable-gpu", "--no-sandbox", "--print-to-pdf="+pdfPath, htmlPath)
+	// Create a temporary directory for user data to isolate the process
+	tempDir, err := os.MkdirTemp("", "pandoc-pro-pdf-*")
+	if err != nil {
+		// Fallback without user-data-dir if temp dir creation fails
+		cmd := exec.Command(edgePath, "--headless", "--disable-gpu", "--no-sandbox", "--print-to-pdf="+pdfPath, htmlPath)
+		hideConsoleWindow(cmd)
+		return cmd.Run()
+	}
+	defer os.RemoveAll(tempDir)
+
+	cmd := exec.Command(edgePath, "--headless", "--disable-gpu", "--no-sandbox", "--no-first-run", "--no-default-browser-check", "--user-data-dir="+tempDir, "--print-to-pdf="+pdfPath, htmlPath)
 	hideConsoleWindow(cmd)
 	return cmd.Run()
 }

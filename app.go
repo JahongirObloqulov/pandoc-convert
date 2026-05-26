@@ -103,7 +103,7 @@ func (a *App) ConvertFile(inputFile string, outputFile string) string {
 
 	// PDF konvertatsiya uchun oflayn brauzer orqali HTML-to-PDF muqobil yo'lini sinab ko'ramiz
 	if ext == ".pdf" {
-		tempHTMLPath := filepath.Join(filepath.Dir(outputFile), "~temp_pdf_convert.html")
+		tempHTMLPath := filepath.Join(filepath.Dir(outputFile), "temp_pdf_convert.html")
 
 		// Kirish faylini avval HTML formatiga o'giramiz (MathML va Standalone bilan)
 		htmlResult := a.ConvertFile(inputFile, tempHTMLPath)
