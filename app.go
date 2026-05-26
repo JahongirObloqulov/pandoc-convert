@@ -106,15 +106,28 @@ func (a *App) ConvertFile(inputFile string, outputFile string) string {
 	// PDF konvertatsiya uchun oflayn brauzer orqali HTML-to-PDF muqobil yo'lini sinab ko'ramiz
 	if ext == ".pdf" {
 		tempHTMLPath := filepath.Join(filepath.Dir(outputFile), "temp_pdf_convert.html")
+		tempPDFPath := filepath.Join(filepath.Dir(outputFile), "temp_pdf_convert.pdf")
+
+		// Har qanday eski vaqtinchalik PDF faylni o'chirib tashlaymiz
+		os.Remove(tempPDFPath)
 
 		// Kirish faylini avval HTML formatiga o'giramiz (MathML va Standalone bilan)
 		htmlResult := a.ConvertFile(inputFile, tempHTMLPath)
 		if htmlResult == "success" {
-			err := convertHTMLToPDFPlatform(tempHTMLPath, outputFile)
+			err := convertHTMLToPDFPlatform(tempHTMLPath, tempPDFPath)
 			os.Remove(tempHTMLPath)
 			if err == nil {
-				return "success"
+				// Vaqtinchalik PDF faylni yakuniy manzilga o'tkazamiz
+				// Agar yakuniy fayl ochiq bo'lsa (masalan, Adobe Acrobat-da), rename xatolik beradi
+				os.Remove(outputFile) // Oldingi faylni o'chiramiz
+				errRename := os.Rename(tempPDFPath, outputFile)
+				if errRename == nil {
+					return "success"
+				}
+				os.Remove(tempPDFPath) // Xatolik bo'lsa tozalaymiz
+				return fmt.Sprintf("PDF faylni saqlashda xatolik (ehtimol u Adobe Reader yoki boshqa dasturda ochiq turibdi): %s", errRename.Error())
 			}
+			os.Remove(tempPDFPath)
 			// Muqobil yo'l xato bersa, standart Pandoc/LaTeX yo'liga o'tiladi (fallback)
 		}
 	}
