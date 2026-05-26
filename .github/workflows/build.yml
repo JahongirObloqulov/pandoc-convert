@@ -50,10 +50,17 @@ jobs:
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
-      - name: Build Application
-        run: |
-          # Go bin papkasi PATH yo'liga qo'shilgan, shuning uchun wails deb ishlatish mumkin
-          wails build
+      - name: Build Application (Windows)
+        if: matrix.platform == 'windows'
+        run: wails build -nopackage
+
+      - name: Build Application (macOS)
+        if: matrix.platform == 'macos'
+        run: wails build
+
+      - name: Build Application (Linux)
+        if: matrix.platform == 'linux'
+        run: wails build -tags webkit2_41
 
       # Windows uchun Pandoc'ni yuklab olish va NSIS installerini yig'ish
       - name: Bundle Pandoc for Windows
