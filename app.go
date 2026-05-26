@@ -91,6 +91,7 @@ func (a *App) getPandocPath() string {
 func (a *App) CheckPandocInstalled() bool {
 	path := a.getPandocPath()
 	cmd := exec.Command(path, "--version")
+	hideConsoleWindow(cmd)
 	err := cmd.Run()
 	return err == nil
 }
@@ -99,6 +100,7 @@ func (a *App) CheckPandocInstalled() bool {
 func (a *App) ConvertFile(inputFile string, outputFile string) string {
 	path := a.getPandocPath()
 	cmd := exec.Command(path, inputFile, "-o", outputFile)
+	hideConsoleWindow(cmd)
 
 	// Xatoliklarni ushlab olish
 	output, err := cmd.CombinedOutput()
@@ -110,9 +112,7 @@ func (a *App) ConvertFile(inputFile string, outputFile string) string {
 
 // O'girilgan faylni standart dasturda ochish
 func (a *App) OpenFile(filePath string) string {
-	cleanedPath := filepath.FromSlash(filePath)
-	cmd := exec.Command("cmd", "/c", "start", "", cleanedPath)
-	err := cmd.Start()
+	err := openFilePlatform(filePath)
 	if err != nil {
 		return err.Error()
 	}
@@ -121,9 +121,7 @@ func (a *App) OpenFile(filePath string) string {
 
 // Faylni Explorer papkasida belgilab ko'rsatish
 func (a *App) RevealInExplorer(filePath string) string {
-	cleanedPath := filepath.FromSlash(filePath)
-	cmd := exec.Command("explorer", "/select,", cleanedPath)
-	err := cmd.Start()
+	err := revealInExplorerPlatform(filePath)
 	if err != nil {
 		return err.Error()
 	}
