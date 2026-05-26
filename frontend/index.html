@@ -254,6 +254,10 @@
                 <div class="flex-1 min-w-0">
                     <p id="msgTitle" class="font-bold text-sm"></p>
                     <p id="msgDesc" class="text-xs mt-0.5 text-slate-600 dark:text-slate-300 break-words leading-relaxed"></p>
+                    <div id="msgTip" class="hidden mt-3 p-3 bg-red-500/5 dark:bg-red-500/10 border border-red-500/10 dark:border-red-500/20 rounded-xl text-xs text-slate-700 dark:text-slate-300">
+                        <p class="font-bold mb-1 text-red-600 dark:text-red-400" id="msgTipTitle"></p>
+                        <p id="msgTipBody" class="leading-relaxed"></p>
+                    </div>
                     
                     <!-- Quick action buttons on Success -->
                     <div id="successActions" class="hidden flex items-center gap-3 mt-3">
@@ -340,7 +344,9 @@
             ok: "OK",
             error: "Xato",
             tooltip_light: "Yorug' rejimga o'tish",
-            tooltip_dark: "Tungi rejimga o'tish"
+            tooltip_dark: "Tungi rejimga o'tish",
+            latex_tip_title: "💡 Maslahat / Tavsiya:",
+            latex_tip_body: "Tizimingizda LaTeX (MiKTeX/TeX Live) o'rnatilgan, ammo zarur paket (masalan, <code>bookmark.sty</code>) topilmadi. Muammoni hal qilish uchun:<br><br>1. <b>MiKTeX Console</b> dasturini oching, <i>Packages</i> bo'limidan <code>bookmark</code> paketini qidirib toping va o'rnating.<br>2. Yoki MiKTeX sozlamalaridan <i>Always install missing packages on the fly</i> (Avtomatik o'rnatish) rejimini yoqing.<br>3. Agar internetsiz rejimda bo'lsangiz, avval faylni <b>HTML</b> yoki <b>Word (DOCX)</b> formatiga o'giring, so'ngra Word yoki brauzer orqali <i>Save as PDF</i> (PDF ko'rinishida saqlash) funksiyasidan foydalaning."
         },
         ru: {
             subtitle: "Конвертируйте документы в любой формат легко и профессионально",
@@ -377,7 +383,9 @@
             ok: "Успешно",
             error: "Ошибка",
             tooltip_light: "Перейти на светлый режим",
-            tooltip_dark: "Перейти на темный режим"
+            tooltip_dark: "Перейти на темный режим",
+            latex_tip_title: "💡 Совет:",
+            latex_tip_body: "В вашей системе установлен LaTeX (MiKTeX/TeX Live), но требуемый пакет (например, <code>bookmark.sty</code>) не найден. Чтобы исправить:<br><br>1. Откройте программу <b>MiKTeX Console</b>, перейдите в раздел <i>Packages</i>, найдите пакет <code>bookmark</code> и установите его.<br>2. Либо в настройках MiKTeX включите режим <i>Always install missing packages on the fly</i> (Всегда устанавливать пакеты на лету).<br>3. Если вы работаете оффлайн, сначала конвертируйте файл в <b>HTML</b> или <b>Word (DOCX)</b>, а затем сохраните как PDF через MS Word или браузер."
         },
         en: {
             subtitle: "Convert documents to any format easily and professionally",
@@ -414,7 +422,9 @@
             ok: "Success",
             error: "Error",
             tooltip_light: "Switch to light mode",
-            tooltip_dark: "Switch to dark mode"
+            tooltip_dark: "Switch to dark mode",
+            latex_tip_title: "💡 Tip:",
+            latex_tip_body: "Your system has LaTeX (MiKTeX/TeX Live) installed, but a required package (e.g., <code>bookmark.sty</code>) was not found. To resolve this:<br><br>1. Open the <b>MiKTeX Console</b> app, go to the <i>Packages</i> section, search for the <code>bookmark</code> package and install it.<br>2. Alternatively, in MiKTeX settings, enable <i>Always install missing packages on the fly</i>.<br>3. If you are offline, convert the file to <b>HTML</b> or <b>Word (DOCX)</b> first, then save it as PDF using MS Word or your browser."
         }
     };
 
@@ -852,11 +862,25 @@
         const titleEl = document.getElementById('msgTitle');
         const descEl = document.getElementById('msgDesc');
         const successActions = document.getElementById('successActions');
+        const msgTip = document.getElementById('msgTip');
+        const msgTipTitle = document.getElementById('msgTipTitle');
+        const msgTipBody = document.getElementById('msgTipBody');
         
         successActions.classList.add('hidden');
+        msgTip.classList.add('hidden');
         titleEl.innerText = title;
         descEl.innerText = desc;
         box.classList.remove('hidden');
+
+        // LaTeX xatoliklari bo'yicha maslahat chiqarish
+        if (type === "error" && (desc.includes(".sty") || desc.includes("LaTeX Error") || desc.includes("producing PDF") || desc.includes("pdflatex"))) {
+            const lang = appState.language;
+            if (translations[lang] && translations[lang]['latex_tip_title']) {
+                msgTipTitle.innerText = translations[lang]['latex_tip_title'];
+                msgTipBody.innerHTML = translations[lang]['latex_tip_body'];
+                msgTip.classList.remove('hidden');
+            }
+        }
 
         // Ranglar va Ikonkalarni turi bo'yicha sozlash
         let iconSvg = '';
