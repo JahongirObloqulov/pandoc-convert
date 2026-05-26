@@ -170,6 +170,14 @@ Ilovada LaTeX formulasiga ega fayllar (masalan, `.tex` yoki `.md`) HTML formatig
 * Bu flaglar yordamida LaTeX formulasidagi barcha matematik tenglamalar standart, oflayn rejimda ishlovchi W3C **MathML** teglariga aylantiriladi.
 * Zamonaviy WebView2/Chromium, Firefox va Safari brauzerlari MathML formatini qo'shimcha internet yoki CSS/JS (MathJax/KaTeX) kutubxonalarisiz, to'liq oflayn va chiroyli render qiladi.
 
+### 5. Oflayn PDF Konvertatsiya (Headless Browser Printing)
+PDF formatiga konvertatsiya qilish jarayonida foydalanuvchida LaTeX o'rnatilmagan yoki LaTeX paketlari (masalan, `bookmark.sty`) yetishmayotgan bo'lsa, xatolikka yo'l qo'ymaslik uchun **oflayn headless brauzer yordamida PDF yaratish** tizimi (pipeline) joriy etildi:
+1. Chiqish fayli `.pdf` kengaytmasida bo'lsa, Go backend avval kirish hujjatini vaqtinchalik HTML fayliga (`~temp_pdf_convert.html` ko'rinishida) o'giradi. Ushbu HTML fayl standalone (`-s`) hamda native MathML (`--mathml`) flaglari bilan yig'ilganligi sababli, undagi barcha dizayn va formulalar chiroyli render qilinadi.
+2. Tizimda mavjud bo'lgan headless brauzer (Windows-da pre-installed bo'lgan **Microsoft Edge**, macOS-da **Google Chrome** yoki **Edge**, Linux-da **Chrome/Chromium**) orqa fonda (fon rejimida) ishga tushiriladi:
+   `browser.exe --headless --disable-gpu --no-sandbox --print-to-pdf="natija.pdf" "vaqtinchalik.html"`
+3. Agar brauzer orqali PDF muvaffaqiyatli yaratilsa, vaqtinchalik HTML fayl o'chiriladi va jarayon muvaffaqiyatli yakunlanadi.
+4. Agar tizimda headless brauzer topilmasa yoki jarayon xatolik bilan tugasa, tizim avtomatik ravishda standart **Pandoc/LaTeX** (pdflatex/xelatex) yo'liga o'tadi (fallback).
+
 ---
 
 ## 🚀 CI/CD va Avtomatlashtirilgan Yig'ish (GitHub Actions)
