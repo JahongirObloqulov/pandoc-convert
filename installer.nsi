@@ -18,7 +18,7 @@ Section "Install"
     
     ; Copy files
     File "build\bin\pandoc-app.exe"
-    File "C:\Users\Cyber\AppData\Local\Pandoc\pandoc.exe"
+    File "build\bin\pandoc.exe"
     
     ; Create shortcuts
     CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\pandoc-app.exe"
