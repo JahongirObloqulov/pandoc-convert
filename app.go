@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -131,6 +133,16 @@ func (a *App) ConvertFile(inputFile string, outputFile string) string {
 	if err != nil {
 		return fmt.Sprintf("Xatolik (kod %s): %s", err.Error(), string(output))
 	}
+
+	// Chiqish fayli .txt (plain text) bo'lsa, matematik formulalarni o'qiladigan Unicode ko'rinishiga keltiramiz
+	if ext == ".txt" {
+		data, errRead := os.ReadFile(outputFile)
+		if errRead == nil {
+			cleanedContent := formatMathInText(string(data))
+			_ = os.WriteFile(outputFile, []byte(cleanedContent), 0644)
+		}
+	}
+
 	return "success"
 }
 
@@ -172,6 +184,10 @@ func (a *App) GetFileInfo(filePath string) map[string]interface{} {
 		data, err := os.ReadFile(filePath)
 		if err == nil {
 			preview := string(data)
+			// Agar input LaTeX (.tex) yoki Markdown (.md) bo'lsa, preview uchun ham formulalarni tozalaymiz
+			if ext == ".tex" || ext == ".md" {
+				preview = formatMathInText(preview)
+			}
 			if len(preview) > 600 {
 				preview = preview[:600] + "..."
 			}
@@ -180,4 +196,75 @@ func (a *App) GetFileInfo(filePath string) map[string]interface{} {
 	}
 
 	return result
+}
+
+// cleanLaTeXMath LaTeX formulalarini odam tushunadigan oddiy matnga aylantiradi
+func cleanLaTeXMath(math string) string {
+	// Bo'shliqlar, quad va LaTeX formatlash yordamchilarini tozalash
+	math = strings.ReplaceAll(math, `\,`, "")
+	math = strings.ReplaceAll(math, `\quad`, " ")
+	math = strings.ReplaceAll(math, `\qquad`, "   ")
+	math = strings.ReplaceAll(math, `\dots`, "...")
+	math = strings.ReplaceAll(math, `\left(`, "(")
+	math = strings.ReplaceAll(math, `\right)`, ")")
+	math = strings.ReplaceAll(math, `\left[`, "[")
+	math = strings.ReplaceAll(math, `\right]`, "]")
+
+	// Grek harflari va matematik simvollar
+	math = strings.ReplaceAll(math, `\Gamma`, "Gamma")
+	math = strings.ReplaceAll(math, `\partial`, "∂")
+	math = strings.ReplaceAll(math, `\alpha`, "α")
+	math = strings.ReplaceAll(math, `\beta`, "β")
+	math = strings.ReplaceAll(math, `\gamma`, "γ")
+	math = strings.ReplaceAll(math, `\theta`, "θ")
+	math = strings.ReplaceAll(math, `\lambda`, "λ")
+	math = strings.ReplaceAll(math, `\pi`, "π")
+	math = strings.ReplaceAll(math, `\sigma`, "σ")
+	math = strings.ReplaceAll(math, `\omega`, "ω")
+	math = strings.ReplaceAll(math, `\Delta`, "Δ")
+	math = strings.ReplaceAll(math, `\nabla`, "∇")
+	math = strings.ReplaceAll(math, `\cdot`, " * ")
+	math = strings.ReplaceAll(math, `\times`, " * ")
+	math = strings.ReplaceAll(math, `\neq`, " != ")
+
+	// Daraja va indeks qavslarini tozalash (masalan, ^{2} -> ^2, _{u} -> _u)
+	reSup := regexp.MustCompile(`\^\{([^}]+)\}`)
+	math = reSup.ReplaceAllString(math, "^$1")
+
+	reSub := regexp.MustCompile(`_\{([^}]+)\}`)
+	math = reSub.ReplaceAllString(math, "_$1")
+
+	// \frac{A}{B} kasrini [A] / [B] ko'rinishiga o'tkazish
+	reFrac := regexp.MustCompile(`\\frac\{([^{}]+)\}\{([^{}]+)\}`)
+	for {
+		next := reFrac.ReplaceAllString(math, "[$1] / [$2]")
+		if next == math {
+			break
+		}
+		math = next
+	}
+
+	// Qolgan LaTeX qiyshiq chiziqlarini (backslash) tozalash
+	math = strings.ReplaceAll(math, `\`, "")
+
+	return math
+}
+
+// formatMathInText matn ichidagi $$...$$ va $...$ formulalarni tozalaydi
+func formatMathInText(content string) string {
+	// 1. Blok formulalar $$...$$
+	reBlock := regexp.MustCompile(`(?s)\$\$(.*?)\$\$`)
+	content = reBlock.ReplaceAllStringFunc(content, func(m string) string {
+		inner := m[2 : len(m)-2]
+		return cleanLaTeXMath(inner)
+	})
+
+	// 2. Qator ichidagi formulalar $...$
+	reInline := regexp.MustCompile(`\$([^$]+)\$`)
+	content = reInline.ReplaceAllStringFunc(content, func(m string) string {
+		inner := m[1 : len(m)-1]
+		return cleanLaTeXMath(inner)
+	})
+
+	return content
 }
