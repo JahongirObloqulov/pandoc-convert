@@ -8,6 +8,8 @@ Ushbu ilova **Wails (Go + HTML/JS/CSS)** texnologiyasi asosida yasalgan bo'lib, 
 
 ## 🚀 Asosiy Imkoniyatlar
 * **Premium Glassmorphic Interfeys**: Zamonaviy to'q fon (Dark Mode), shaffof dizayn (glassmorphism) va silliq animatsiyalar.
+* **Mavzular (Night/Light Mode)**: Tungi (Dark) va yorug' (Light) interfeys rejimlari. Foydalanuvchi tanlagan rejim saqlanib qoladi (localStorage yordamida) va keyingi safar avtomatik yuklanadi.
+* **Ko'p Tilli Interfeys (i18n)**: O'zbek (UZ), Rus (RU) va Ingliz (EN) tillarini to'liq qo'llab-quvvatlash. Ilova ishga tushganda tizim tilini avtomatik aniqlaydi, shuningdek interfeysdagi pill-buttonlar orqali tilni darhol o'zgartirish mumkin.
 * **Drag & Drop**: Fayllarni interfeysga shunchaki sudrab tashlash orqali yuklash.
 * **Fayl Preview**: Matnli hujjatlar (Markdown, TXT, HTML, LaTeX) tarkibini o'girishdan oldin dastur ichida tezkor ko'rish.
 * **Avtomatik Taklif (Auto-suggest)**: Asl fayl tanlanganda chiqish fayli nomi va saqlash joyini avtomatik to'ldirish.
