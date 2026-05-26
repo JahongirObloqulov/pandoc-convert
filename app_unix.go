@@ -2,6 +2,8 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -33,4 +35,36 @@ func revealInExplorerPlatform(filePath string) error {
 		cmd = exec.Command("xdg-open", parentDir)
 	}
 	return cmd.Start()
+}
+
+func convertHTMLToPDFPlatform(htmlPath string, pdfPath string) error {
+	browserPath := ""
+	if runtime.GOOS == "darwin" {
+		paths := []string{
+			"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+			"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+		}
+		for _, p := range paths {
+			if _, err := os.Stat(p); err == nil {
+				browserPath = p
+				break
+			}
+		}
+	} else {
+		// Linux
+		browsers := []string{"google-chrome", "chromium-browser", "chromium", "google-chrome-stable"}
+		for _, b := range browsers {
+			if p, err := exec.LookPath(b); err == nil {
+				browserPath = p
+				break
+			}
+		}
+	}
+
+	if browserPath == "" {
+		return fmt.Errorf("no headless browser found on macOS/Linux")
+	}
+
+	cmd := exec.Command(browserPath, "--headless", "--disable-gpu", "--no-sandbox", "--print-to-pdf="+pdfPath, htmlPath)
+	return cmd.Run()
 }

@@ -99,9 +99,25 @@ func (a *App) CheckPandocInstalled() bool {
 // Pandoc buyrug'ini ishga tushirish
 func (a *App) ConvertFile(inputFile string, outputFile string) string {
 	path := a.getPandocPath()
+	ext := filepath.Ext(outputFile)
+
+	// PDF konvertatsiya uchun oflayn brauzer orqali HTML-to-PDF muqobil yo'lini sinab ko'ramiz
+	if ext == ".pdf" {
+		tempHTMLPath := filepath.Join(filepath.Dir(outputFile), "~temp_pdf_convert.html")
+
+		// Kirish faylini avval HTML formatiga o'giramiz (MathML va Standalone bilan)
+		htmlResult := a.ConvertFile(inputFile, tempHTMLPath)
+		if htmlResult == "success" {
+			err := convertHTMLToPDFPlatform(tempHTMLPath, outputFile)
+			os.Remove(tempHTMLPath)
+			if err == nil {
+				return "success"
+			}
+			// Muqobil yo'l xato bersa, standart Pandoc/LaTeX yo'liga o'tiladi (fallback)
+		}
+	}
 
 	args := []string{inputFile, "-o", outputFile}
-	ext := filepath.Ext(outputFile)
 	if ext == ".html" || ext == ".htm" {
 		// Standalone HTML fayl yaratish va formulalarni MathML formatida oflayn va chiroyli ko'rsatish
 		args = append(args, "-s", "--mathml")
