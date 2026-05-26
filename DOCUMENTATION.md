@@ -165,6 +165,11 @@ Dasturda tungi rejim (Dark Mode) va yorug' rejim (Light Mode) mavjud.
 ### 3. Drag & Drop Tizimi
 Foydalanuvchi faylni dastur oynasiga sudrab kelganda, `dropZone` elementi vizual o'zgaradi (faollashadi). Drop hodisasi sodir bo'lganda, JavaScript fayl yo'lini o'qiydi va Go backend orqali fayl ma'lumotlarini yuklaydi.
 
+### 4. Formulalar renderi (Native MathML)
+Ilovada LaTeX formulasiga ega fayllar (masalan, `.tex` yoki `.md`) HTML formatiga o'girilayotganda, Pandoc-ga avtomatik ravishda `-s` (standalone) va `--mathml` flaglari uzatiladi.
+* Bu flaglar yordamida LaTeX formulasidagi barcha matematik tenglamalar standart, oflayn rejimda ishlovchi W3C **MathML** teglariga aylantiriladi.
+* Zamonaviy WebView2/Chromium, Firefox va Safari brauzerlari MathML formatini qo'shimcha internet yoki CSS/JS (MathJax/KaTeX) kutubxonalarisiz, to'liq oflayn va chiroyli render qiladi.
+
 ---
 
 ## 🚀 CI/CD va Avtomatlashtirilgan Yig'ish (GitHub Actions)
