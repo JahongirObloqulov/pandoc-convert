@@ -178,6 +178,17 @@ PDF formatiga konvertatsiya qilish jarayonida foydalanuvchida LaTeX o'rnatilmaga
 3. Agar brauzer orqali PDF muvaffaqiyatli yaratilsa, vaqtinchalik HTML fayl o'chiriladi va jarayon muvaffaqiyatli yakunlanadi.
 4. Agar tizimda headless brauzer topilmasa yoki jarayon xatolik bilan tugasa, tizim avtomatik ravishda standart **Pandoc/LaTeX** (pdflatex/xelatex) yo'liga o'tadi (fallback).
 
+### 6. Matnli fayllarda formulalar renderi (.txt formatida)
+LaTeX formulasiga ega fayllar (.tex yoki .md) oddiy matnli `.txt` formatiga o'girilayotganda, formulalarning LaTeX sintaksisida (masalan, `\frac{...}{...}`, `\Gamma` va boshqalar) qolib ketishining oldini olish uchun Go backend qismida **avtomatik matematik tozalovchi** (math cleaner parser) joriy etildi:
+1. Konvertatsiya tugagandan so'ng, agar natija fayli `.txt` kengaytmasiga ega bo'lsa, Go backend faylni o'qiydi va undagi barcha `$$...$$` va `$ ... $` matematik bloklarini qidirib topadi.
+2. LaTeX formulalarini odam o'qiy oladigan chiroyli Unicode va matematik ko'rinishga o'tkazadi:
+   * Grek harflari mos so'zlarga yoki Unicode belgilarga almashtiriladi (masalan, `\Gamma` -> `Gamma`, `\alpha` -> `α`, `\partial` -> `∂`).
+   * Darajalar va indekslar qavslardan tozalanadi (masalan, `^{2}` -> `^2`, `_{u}` -> `_u`, `_{11}^{1}` -> `_11^1`).
+   * Kasrlar `\frac{A}{B}` ko'rinishidan `[A] / [B]` ko'rinishiga o'tkaziladi.
+   * `\left(`, `\right)` kabi LaTeX yordamchi belgilari tozalab tashlanadi.
+3. Yangi tozalangan matn faylga qayta yoziladi.
+4. Xuddi shu tozalash mantig'i ilovaning **Preview** (Fayl tarkibidan parcha) paneli uchun ham qo'llaniladi. Foydalanuvchi `.tex` yoki `.md` faylini tanlaganda, preview panelida raw LaTeX o'rniga o'qilishi oson bo'lgan soddalashtirilgan formulalar ko'rsatiladi.
+
 ---
 
 ## 🚀 CI/CD va Avtomatlashtirilgan Yig'ish (GitHub Actions)
