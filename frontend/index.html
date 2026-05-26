@@ -259,9 +259,11 @@
             </button>
         </div>
         
-        <div id="historyContainer" class="flex flex-col gap-2 max-h-40 overflow-y-auto pr-1">
+        <div class="max-h-40 overflow-y-auto pr-1">
             <!-- Empty state -->
             <p id="emptyHistoryText" class="text-xs text-slate-600 text-center py-4 italic">Hozircha o'girilgan fayllar yo'q</p>
+            <!-- History items list -->
+            <div id="historyContainer" class="flex flex-col gap-2"></div>
         </div>
     </div>
 </div>
@@ -676,7 +678,6 @@
         
         if (appState.history.length === 0) {
             emptyText.classList.remove('hidden');
-            container.appendChild(emptyText);
             return;
         }
 
