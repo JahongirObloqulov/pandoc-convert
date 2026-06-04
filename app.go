@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	goRuntime "runtime"
 	"strings"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -60,11 +61,15 @@ func (a *App) SelectOutputFile(extension string) string {
 
 // Pandoc buyrug'ining yo'lini aniqlash
 func (a *App) getPandocPath() string {
-	// 1. Dastur ijro etilayotgan papkadagi pandoc.exe (portable/bundled rejim)
+	// 1. Dastur ijro etilayotgan papkadagi pandoc/pandoc.exe (portable/bundled rejim)
 	exePath, err := os.Executable()
 	if err == nil {
 		localDir := filepath.Dir(exePath)
-		bundledPandoc := filepath.Join(localDir, "pandoc.exe")
+		filename := "pandoc"
+		if goRuntime.GOOS == "windows" {
+			filename = "pandoc.exe"
+		}
+		bundledPandoc := filepath.Join(localDir, filename)
 		if _, err := os.Stat(bundledPandoc); err == nil {
 			return bundledPandoc
 		}
@@ -76,7 +81,22 @@ func (a *App) getPandocPath() string {
 		return "pandoc"
 	}
 
-	// 3. Foydalanuvchining Local AppData yo'lidagi Pandoc ni tekshiramiz
+	// 3. macOS/Linux uchun keng tarqalgan standart yo'llarni tekshiramiz (chunki GUI ilovalarda PATH farq qilishi mumkin)
+	if goRuntime.GOOS != "windows" {
+		commonPaths := []string{
+			"/opt/homebrew/bin/pandoc",
+			"/usr/local/bin/pandoc",
+			"/usr/bin/pandoc",
+			"/bin/pandoc",
+		}
+		for _, p := range commonPaths {
+			if _, err := os.Stat(p); err == nil {
+				return p
+			}
+		}
+	}
+
+	// 4. Foydalanuvchining Local AppData yo'lidagi Pandoc ni tekshiramiz (Windows uchun)
 	home, err := os.UserHomeDir()
 	if err == nil {
 		localPandoc := filepath.Join(home, "AppData", "Local", "Pandoc", "pandoc.exe")
