@@ -124,7 +124,7 @@
             </button>
             
             <!-- Pandoc Status Badge -->
-            <div id="pandocStatus" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold glass-inner">
+            <div id="pandocStatus" onclick="checkPandoc()" role="button" tabindex="0" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold glass-inner cursor-pointer hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors select-none" title="Yangilash uchun bosing / Нажмите для обновления / Click to refresh">
                 <span class="relative flex h-2 w-2">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
@@ -758,9 +758,26 @@
         document.getElementById('outputPath').value = suggestedPath;
     }
 
+    // Fayl kengaytmasini o'zgartiruvchi yordamchi funksiya
+    function changeExtension(path, newExt) {
+        let lastDot = path.lastIndexOf('.');
+        let lastSlash = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+        if (lastDot > lastSlash) {
+            return path.substring(0, lastDot) + newExt;
+        }
+        return path + newExt;
+    }
+
     // Format o'zgarganda chiqish yo'lini ham yangilaymiz
     function onFormatChange() {
-        suggestOutputPath();
+        if (appState.outputFilePath) {
+            let selectedFormat = document.getElementById('formatSelect').value;
+            let newPath = changeExtension(appState.outputFilePath, selectedFormat);
+            appState.outputFilePath = newPath;
+            document.getElementById('outputPath').value = newPath;
+        } else {
+            suggestOutputPath();
+        }
     }
 
     // Preview paneli ochib-yopilishi

@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -44,6 +45,8 @@ func convertHTMLToPDFPlatform(htmlPath string, pdfPath string) error {
 		paths := []string{
 			"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
 			"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+			"/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+			"/Applications/Chromium.app/Contents/MacOS/Chromium",
 		}
 		for _, p := range paths {
 			if _, err := os.Stat(p); err == nil {
@@ -66,18 +69,25 @@ func convertHTMLToPDFPlatform(htmlPath string, pdfPath string) error {
 		return fmt.Errorf("no headless browser found on macOS/Linux")
 	}
 
+	// Format local html file path as a file:// URL to handle spaces and special chars correctly
+	u := &url.URL{
+		Scheme: "file",
+		Path:   filepath.ToSlash(htmlPath),
+	}
+	htmlURL := u.String()
+
 	// Create a temporary directory for user data to isolate the process
 	tempDir, err := os.MkdirTemp("", "pandoc-pro-pdf-*")
 	if err != nil {
 		// Fallback without user-data-dir if temp dir creation fails
-		cmd := exec.Command(browserPath, "--headless", "--disable-gpu", "--no-sandbox", "--no-pdf-header-footer", "--print-to-pdf-no-header", "--print-to-pdf="+pdfPath, htmlPath)
+		cmd := exec.Command(browserPath, "--headless", "--disable-gpu", "--no-sandbox", "--no-pdf-header-footer", "--print-to-pdf-no-header", "--print-to-pdf="+pdfPath, htmlURL)
 		errRun := cmd.Run()
 		if errRun != nil {
 			return errRun
 		}
 	} else {
 		defer os.RemoveAll(tempDir)
-		cmd := exec.Command(browserPath, "--headless", "--disable-gpu", "--no-sandbox", "--no-first-run", "--no-default-browser-check", "--no-pdf-header-footer", "--print-to-pdf-no-header", "--user-data-dir="+tempDir, "--print-to-pdf="+pdfPath, htmlPath)
+		cmd := exec.Command(browserPath, "--headless", "--disable-gpu", "--no-sandbox", "--no-first-run", "--no-default-browser-check", "--no-pdf-header-footer", "--print-to-pdf-no-header", "--user-data-dir="+tempDir, "--print-to-pdf="+pdfPath, htmlURL)
 		errRun := cmd.Run()
 		if errRun != nil {
 			return errRun

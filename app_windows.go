@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -37,6 +38,9 @@ func convertHTMLToPDFPlatform(htmlPath string, pdfPath string) error {
 	paths := []string{
 		`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`,
 		`C:\Program Files\Microsoft\Edge\Application\msedge.exe`,
+		`C:\Program Files\Google\Chrome\Application\chrome.exe`,
+		`C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`,
+		`C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe`,
 	}
 	for _, p := range paths {
 		if _, err := os.Stat(p); err == nil {
@@ -50,16 +54,25 @@ func convertHTMLToPDFPlatform(htmlPath string, pdfPath string) error {
 			edgePath = p
 		} else if p, err := exec.LookPath("chrome"); err == nil {
 			edgePath = p
+		} else if p, err := exec.LookPath("brave"); err == nil {
+			edgePath = p
 		} else {
 			return fmt.Errorf("no headless browser found on Windows")
 		}
 	}
 
+	// Format local html file path as a file:// URL to handle spaces and special chars correctly
+	u := &url.URL{
+		Scheme: "file",
+		Path:   filepath.ToSlash(htmlPath),
+	}
+	htmlURL := u.String()
+
 	// Create a temporary directory for user data to isolate the process
 	tempDir, err := os.MkdirTemp("", "pandoc-pro-pdf-*")
 	if err != nil {
 		// Fallback without user-data-dir if temp dir creation fails
-		cmd := exec.Command(edgePath, "--headless", "--disable-gpu", "--no-sandbox", "--no-pdf-header-footer", "--print-to-pdf-no-header", "--print-to-pdf="+pdfPath, htmlPath)
+		cmd := exec.Command(edgePath, "--headless", "--disable-gpu", "--no-sandbox", "--no-pdf-header-footer", "--print-to-pdf-no-header", "--print-to-pdf="+pdfPath, htmlURL)
 		hideConsoleWindow(cmd)
 		errRun := cmd.Run()
 		if errRun != nil {
@@ -67,7 +80,7 @@ func convertHTMLToPDFPlatform(htmlPath string, pdfPath string) error {
 		}
 	} else {
 		defer os.RemoveAll(tempDir)
-		cmd := exec.Command(edgePath, "--headless", "--disable-gpu", "--no-sandbox", "--no-first-run", "--no-default-browser-check", "--no-pdf-header-footer", "--print-to-pdf-no-header", "--user-data-dir="+tempDir, "--print-to-pdf="+pdfPath, htmlPath)
+		cmd := exec.Command(edgePath, "--headless", "--disable-gpu", "--no-sandbox", "--no-first-run", "--no-default-browser-check", "--no-pdf-header-footer", "--print-to-pdf-no-header", "--user-data-dir="+tempDir, "--print-to-pdf="+pdfPath, htmlURL)
 		hideConsoleWindow(cmd)
 		errRun := cmd.Run()
 		if errRun != nil {

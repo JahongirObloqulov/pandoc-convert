@@ -214,17 +214,25 @@ func (a *App) GetFileInfo(filePath string) map[string]interface{} {
 	// Fayl matnli bo'lsa uni o'qish va preview olish
 	ext := filepath.Ext(filePath)
 	if ext == ".md" || ext == ".txt" || ext == ".html" || ext == ".tex" {
-		data, err := os.ReadFile(filePath)
+		f, err := os.Open(filePath)
 		if err == nil {
-			preview := string(data)
-			// Agar input LaTeX (.tex) yoki Markdown (.md) bo'lsa, preview uchun ham formulalarni tozalaymiz
-			if ext == ".tex" || ext == ".md" {
-				preview = formatMathInText(preview)
+			defer f.Close()
+			buf := make([]byte, 4096)
+			n, errRead := f.Read(buf)
+			if errRead == nil || n > 0 {
+				preview := string(buf[:n])
+				// Agar input LaTeX (.tex) yoki Markdown (.md) bo'lsa, preview uchun ham formulalarni tozalaymiz
+				if ext == ".tex" || ext == ".md" {
+					preview = formatMathInText(preview)
+				}
+				runes := []rune(preview)
+				if len(runes) > 600 {
+					preview = string(runes[:600]) + "..."
+				} else if n == 4096 {
+					preview = string(runes) + "..."
+				}
+				result["preview"] = preview
 			}
-			if len(preview) > 600 {
-				preview = preview[:600] + "..."
-			}
-			result["preview"] = preview
 		}
 	}
 
@@ -259,6 +267,18 @@ func cleanLaTeXMath(math string) string {
 	math = strings.ReplaceAll(math, `\cdot`, " * ")
 	math = strings.ReplaceAll(math, `\times`, " * ")
 	math = strings.ReplaceAll(math, `\neq`, " != ")
+	
+	// Qo'shimcha matematik simvollar va munosabatlar
+	math = strings.ReplaceAll(math, `\leq`, " <= ")
+	math = strings.ReplaceAll(math, `\le`, " <= ")
+	math = strings.ReplaceAll(math, `\geq`, " >= ")
+	math = strings.ReplaceAll(math, `\ge`, " >= ")
+	math = strings.ReplaceAll(math, `\infty`, "∞")
+	math = strings.ReplaceAll(math, `\approx`, "≈")
+	math = strings.ReplaceAll(math, `\pm`, "±")
+	math = strings.ReplaceAll(math, `\div`, "/")
+	math = strings.ReplaceAll(math, `\sum`, "Σ")
+	math = strings.ReplaceAll(math, `\int`, "∫")
 
 	// Daraja va indeks qavslarini tozalash (masalan, ^{2} -> ^2, _{u} -> _u)
 	reSup := regexp.MustCompile(`\^\{([^}]+)\}`)
@@ -277,10 +297,67 @@ func cleanLaTeXMath(math string) string {
 		math = next
 	}
 
+	// \sqrt{A} ildizini √[A] ko'rinishiga o'tkazish
+	reSqrt := regexp.MustCompile(`\\sqrt\{([^{}]+)\}`)
+	for {
+		next := reSqrt.ReplaceAllString(math, "√[$1]")
+		if next == math {
+			break
+		}
+		math = next
+	}
+
 	// Qolgan LaTeX qiyshiq chiziqlarini (backslash) tozalash
 	math = strings.ReplaceAll(math, `\`, "")
 
+	// Ko'p ketma-ket kelgan bo'shliqlarni bittaga keltiramiz va chetlarini tozalaymiz
+	reSpaces := regexp.MustCompile(`\s+`)
+	math = reSpaces.ReplaceAllString(math, " ")
+	math = strings.TrimSpace(math)
+
 	return math
+}
+
+// isMathFormula matn haqiqatan ham matematik formula ekanini tekshiradi
+func isMathFormula(s string) bool {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return false
+	}
+	// LaTeX buyrug'i bo'lsa (backslash bo'lsa)
+	if strings.Contains(s, "\\") {
+		return true
+	}
+	// Daraja yoki indeks bo'lsa
+	if strings.ContainsAny(s, "^_") {
+		return true
+	}
+	// Matematik operatorlar va munosabatlar bo'lsa
+	if strings.ContainsAny(s, "=<>+*/") {
+		return true
+	}
+	// Minus belgisi bo'lib, yonida harflar qatnashgan bo'lsa (masalan, x-y)
+	if strings.Contains(s, "-") {
+		hasLetters := false
+		for _, r := range s {
+			if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || r > 127 {
+				hasLetters = true
+				break
+			}
+		}
+		if hasLetters {
+			return true
+		}
+	}
+	// Yagona o'zgaruvchi harf bo'lsa (masalan, x, N, θ)
+	runes := []rune(s)
+	if len(runes) == 1 {
+		r := runes[0]
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || r > 127 {
+			return true
+		}
+	}
+	return false
 }
 
 // formatMathInText matn ichidagi $$...$$ va $...$ formulalarni tozalaydi
@@ -293,10 +370,14 @@ func formatMathInText(content string) string {
 	})
 
 	// 2. Qator ichidagi formulalar $...$
-	reInline := regexp.MustCompile(`\$([^$]+)\$`)
+	// Bo'shliqlar bilan boshlanmaydigan va tugamaydigan qismlarni qidiramiz
+	reInline := regexp.MustCompile(`\$([^\$\s](?:[^\$]*?[^\$\s])?)\$`)
 	content = reInline.ReplaceAllStringFunc(content, func(m string) string {
 		inner := m[1 : len(m)-1]
-		return cleanLaTeXMath(inner)
+		if isMathFormula(inner) {
+			return cleanLaTeXMath(inner)
+		}
+		return m // Matematik formula bo'lmasa, o'zgarishsiz qoldiramiz
 	})
 
 	return content
