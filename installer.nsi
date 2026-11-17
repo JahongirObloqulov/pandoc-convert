@@ -9,6 +9,8 @@ InstallDir "$PROGRAMFILES64\PandocConvertPro"
 
 Name "${APP_NAME}"
 OutFile "${OUT_FILE}"
+Icon "build\windows\icon.ico"
+UninstallIcon "build\windows\icon.ico"
 RequestExecutionLevel admin
 
 Page Directory
@@ -22,12 +24,16 @@ Section "Install"
     ; Copy files
     File "build\bin\pandoc-app.exe"
     File "build\bin\pandoc.exe"
+    File "build\windows\icon.ico"
     
     ; Create shortcuts
-    CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\pandoc-app.exe"
+    CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\pandoc-app.exe" "" "$INSTDIR\icon.ico" 0
     CreateDirectory "$SMPROGRAMS\${APP_NAME}"
-    CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\pandoc-app.exe"
+    CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\pandoc-app.exe" "" "$INSTDIR\icon.ico" 0
     CreateShortcut "$SMPROGRAMS\${APP_NAME}\Uninstall.lnk" "$INSTDIR\uninstall.exe"
+
+    ; Refresh Windows icon cache so desktop shortcut shows the icon immediately
+    System::Call 'Shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)'
     
     ; Write uninstaller
     WriteUninstaller "$INSTDIR\uninstall.exe"
@@ -44,6 +50,7 @@ Section "Uninstall"
     SetShellVarContext all
     Delete "$INSTDIR\pandoc-app.exe"
     Delete "$INSTDIR\pandoc.exe"
+    Delete "$INSTDIR\icon.ico"
     Delete "$INSTDIR\uninstall.exe"
     RMDir "$INSTDIR"
     
