@@ -1,6 +1,6 @@
 !define APP_NAME "Pandoc Convert Pro"
 !define COMP_NAME "JahongirObloqulov"
-!define VERSION "1.0.0"
+!define VERSION "1.1.0"
 !define OUT_FILE "build\bin\pandoc-pro-installer.exe"
 !define REG_UNINSTALL "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
 
