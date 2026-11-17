@@ -15,7 +15,7 @@ Ushbu ilova **Wails (Go + HTML/JS/CSS)** texnologiyasi asosida yasalgan bo'lib, 
 * **Avtomatik Taklif (Auto-suggest)**: Asl fayl tanlanganda chiqish fayli nomi va saqlash joyini avtomatik to'ldirish.
 * **Tezkor Harakatlar**: Fayl o'girilgandan so'ng uni to'g'ridan-to'g'ri standart dastur orqali ochish yoki u joylashgan papkani Windows Explorer/macOS Finder orqali belgilangan holda ko'rish.
 * **Tarix Paneli**: Oxirgi 5 ta o'girilgan fayllarni tezkor kuzatish va ularni tarixdan turib ham ochish.
-* **100% Oflayn Ishlash**: Dastur ishlashi uchun kompyuterda internet bo'lishi yoki tizimga Pandoc dasturini alohida o'rnatish talab etilmaydi (chunki oflayn paket ichida kerakli barcha vositalar jamlangan).
+* **100% Oflayn Ishlash**: Dastur ishlashi uchun kompyuterda internet bo'lishi yoki tizimga Pandoc dasturini alohida o'rnatish talab etilmaydi — oflayn `pandoc`, Tailwind CSS stillari va shriftlar (`Outfit`, `JetBrains Mono`) ilova ichiga jamlangan.
 
 ---
 
@@ -95,4 +95,14 @@ Ushbu kodni o'zingizning GitHub repositoriyangizga push qilganingizda:
 2. Dastur kodlarini kompilyatsiya qiladi va har bir platforma uchun mos keladigan oflayn Pandoc faylini yuklab olib, dasturga biriktiradi (bundle).
    * **Windows** da NSIS dasturi avtomatik o'rnatilib, installer yig'iladi.
    * **Linux (Ubuntu 24.04)** da kompilyatsiya `webkit2_41` tagi bilan bajariladi.
-3. Natijada sizga yuklab olish uchun tayyor oflayn paketlarni (Windows Installer `.exe`, Mac `.zip`, Linux `.tar.gz`) taqdim etadi.
+3. Natijada sizga yuklab olish uchun tayyor oflayn paketlarni (Windows Installer `.exe`, Mac Universal `.zip`, Linux `.tar.gz`) taqdim etadi.
+
+---
+
+## 📝 So'nggi O'zgarishlar
+
+- **Drag & Drop tuzatildi:** Wails'ning `OnFileDrop` mexanizmi yoqilib, fayllarni oynaga sudrab tashlash barcha platformalarda to'g'ri ishlaydigan qilindi.
+- **To'liq oflayn interfeys:** Tashqi CDN havolalari olib tashlanib, Tailwind CSS va `Outfit` / `JetBrains Mono` shriftlari Vite build ichiga joylandi.
+- **Xavfsizlik va barqarorlik:** Windows'da fayl ochish `ShellExecute` ga o'tkazildi, tarix paneli XSS va apostrofli fayl nomlaridan himoyalandi, shuningdek asl faylning ustidan yozib yuborilishining oldi olindi (`_converted` / `ERR_SAME_FILE`).
+- **PDF va LaTeX yaxshilanishlari:** PDF konvertatsiyada oraliq fayllar alohida vaqtinchalik papkada yaratiladi va rasmlar `--embed-resources` bilan saqlanadi; Pandoc va headless brauzer uchun timeout qo'shildi; `cleanLaTeXMath` buyruqlarni to'liq nomi bilan almashtiradigan qilindi.
+- **Kross-platforma va CI/CD:** macOS uchun Universal binary (`arm64` + `x86_64`) va birlashtirilgan `pandoc` yig'iladi; Windows installer `Program Files` (64-bit) ga o'tkazildi; GitHub Actions Node.js 24 bilan mos versiyalarga yangilandi; Go unit testlari (`app_test.go`) qo'shildi.
