@@ -4,94 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pandoc Pro Konverteri</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#f0f7ff',
-                            100: '#e0effe',
-                            200: '#bae2fd',
-                            300: '#7dd2fc',
-                            400: '#38bdf8',
-                            500: '#0ea5e9',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            800: '#075985',
-                            900: '#0c4a6e',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: radial-gradient(circle at top left, #f8fafc, #e2e8f0);
-            color: #0f172a;
-            transition: background 0.3s ease, color 0.3s ease;
-        }
-        html.dark body {
-            background: radial-gradient(circle at top left, #0f172a, #020617);
-            color: #f1f5f9;
-        }
-        .code-font {
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px rgba(15, 23, 42, 0.08) solid;
-            transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-        html.dark .glass {
-            background: rgba(15, 23, 42, 0.65);
-            border: 1px rgba(255, 255, 255, 0.08) solid;
-        }
-        .glass-inner {
-            background: rgba(241, 245, 249, 0.6);
-            border: 1px rgba(15, 23, 42, 0.05) solid;
-            transition: background 0.3s ease, border-color 0.3s ease;
-        }
-        html.dark .glass-inner {
-            background: rgba(30, 41, 59, 0.4);
-            border: 1px rgba(255, 255, 255, 0.05) solid;
-        }
-        .drop-glow {
-            box-shadow: 0 0 25px rgba(14, 165, 233, 0.15);
-        }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.1);
-        }
-        html.dark ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.3);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(14, 165, 233, 0.3);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(14, 165, 233, 0.5);
-        }
-        @keyframes pulse-slow {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.05); }
-        }
-        .status-pulse {
-            animation: pulse-slow 2s infinite ease-in-out;
-        }
-    </style>
+    <link rel="stylesheet" href="./src/main.css">
 </head>
 <body class="flex items-center justify-center min-h-screen p-4 overflow-y-auto">
 
@@ -141,7 +54,7 @@
         <div>
             <label data-i18n="label_source" class="block text-slate-500 dark:text-slate-300 text-xs font-bold uppercase tracking-wider mb-2">Asl fayl:</label>
             
-            <div id="dropZone" onclick="selectInput()" 
+            <div id="dropZone" onclick="selectInput()" style="--wails-drop-target: drop"
                  class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-sky-500/70 bg-slate-50 dark:bg-slate-950/20 hover:bg-sky-50/50 dark:hover:bg-sky-950/10 rounded-2xl p-6 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center gap-3 group relative overflow-hidden">
                 
                 <input type="file" id="fileDummy" class="hidden" />
@@ -340,6 +253,7 @@
             title_sys_error: "❌ Tizimli xatolik",
             title_warning: "⚠️ Xatolik",
             msg_drag_error: "Drag-and-drop orqali yuklangan fayl yo'li aniqlanmadi.",
+            msg_same_file: "Chiqish fayli asl fayl bilan bir xil. Asl faylni ustidan yozib yubormaslik uchun boshqa nom yoki joy tanlang.",
             btn_open_file: "Faylni ochish",
             btn_reveal_folder: "Papkada ko'rsatish",
             placeholder_output: "Saqlash joyini tanlang...",
@@ -379,6 +293,7 @@
             title_sys_error: "❌ Системная ошибка",
             title_warning: "⚠️ Предупреждение",
             msg_drag_error: "Путь к файлу, загруженному перетаскиванием, не определен.",
+            msg_same_file: "Выходной файл совпадает с исходным. Выберите другое имя или папку, чтобы не перезаписать исходный файл.",
             btn_open_file: "Открыть файл",
             btn_reveal_folder: "Показать в папке",
             placeholder_output: "Выберите место сохранения...",
@@ -418,6 +333,7 @@
             title_sys_error: "❌ System Error",
             title_warning: "⚠️ Warning",
             msg_drag_error: "Could not resolve the path of the dropped file.",
+            msg_same_file: "The output file is the same as the source file. Choose a different name or folder so the original is not overwritten.",
             btn_open_file: "Open File",
             btn_reveal_folder: "Reveal in Folder",
             placeholder_output: "Choose where to save...",
@@ -612,39 +528,26 @@
         updateConvertButtonState();
     }
 
-    // Drag and Drop funksiyasini sozlash
+    // Drag and Drop funksiyasini sozlash.
+    // WebView brauzer File obyektlarida haqiqiy fayl yo'lini bermaydi (file.path faqat Electron'da bor),
+    // shuning uchun Wails'ning OnFileDrop hodisasidan foydalanamiz. U fayllar "--wails-drop-target: drop"
+    // CSS xususiyatiga ega #dropZone ustiga tashlanganda haqiqiy yo'llarni beradi va sudrash vaqtida
+    // elementga "wails-drop-target-active" klassini qo'shadi (stil main.css'da).
     function setupDragAndDrop() {
-        const dropZone = document.getElementById('dropZone');
+        if (!window.runtime || typeof window.runtime.OnFileDrop !== 'function') {
+            console.warn("Wails runtime topilmadi: drag-and-drop o'chirilgan");
+            return;
+        }
 
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropZone.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                dropZone.classList.add('border-sky-500/70', 'bg-sky-50/50', 'dark:bg-sky-950/10', 'drop-glow');
-            }, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                dropZone.classList.remove('border-sky-500/70', 'bg-sky-50/50', 'dark:bg-sky-950/10', 'drop-glow');
-            }, false);
-        });
-
-        dropZone.addEventListener('drop', async (e) => {
+        window.runtime.OnFileDrop(async (x, y, paths) => {
             const lang = appState.language;
-            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                let file = e.dataTransfer.files[0];
-                // Wails WebView2 muhitida local path shu xususiyatda bo'ladi
-                let path = file.path;
-                if (path) {
-                    await handleFileInputSelected(path);
-                } else {
-                    showMsg(translations[lang]['title_warning'], translations[lang]['msg_drag_error'], "warning");
-                }
+            if (paths && paths.length > 0 && paths[0]) {
+                // Agar avval fayl tanlangan bo'lsa ham, yangi tashlangan fayl uni almashtiradi
+                await handleFileInputSelected(paths[0]);
+            } else {
+                showMsg(translations[lang]['title_warning'], translations[lang]['msg_drag_error'], "warning");
             }
-        });
+        }, true);
     }
 
     // Fayl tanlash tugmasi bosilganda
@@ -741,18 +644,8 @@
     function suggestOutputPath() {
         if (!appState.inputFilePath) return;
 
-        let inputPath = appState.inputFilePath;
         let selectedFormat = document.getElementById('formatSelect').value;
-        
-        // Asl fayl kengaytmasini o'zgartirish
-        let lastDotIndex = inputPath.lastIndexOf('.');
-        let suggestedPath = '';
-        
-        if (lastDotIndex !== -1) {
-            suggestedPath = inputPath.substring(0, lastDotIndex) + selectedFormat;
-        } else {
-            suggestedPath = inputPath + selectedFormat;
-        }
+        let suggestedPath = avoidInputPath(changeExtension(appState.inputFilePath, selectedFormat));
         
         appState.outputFilePath = suggestedPath;
         document.getElementById('outputPath').value = suggestedPath;
@@ -768,11 +661,30 @@
         return path + newExt;
     }
 
+    // Yo'llarni solishtirish uchun normallashtirish (Windows/macOS katta-kichik harfni farqlamaydi)
+    function normalizePath(path) {
+        return (path || '').replace(/\\/g, '/').toLowerCase();
+    }
+
+    // Taklif qilingan chiqish yo'li asl fayl bilan bir xil bo'lsa (masalan, .md -> .md),
+    // asl faylni ustidan yozib yubormaslik uchun nomiga "_converted" qo'shamiz
+    function avoidInputPath(path) {
+        if (!appState.inputFilePath || normalizePath(path) !== normalizePath(appState.inputFilePath)) {
+            return path;
+        }
+        let lastDot = path.lastIndexOf('.');
+        let lastSlash = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+        if (lastDot > lastSlash) {
+            return path.substring(0, lastDot) + '_converted' + path.substring(lastDot);
+        }
+        return path + '_converted';
+    }
+
     // Format o'zgarganda chiqish yo'lini ham yangilaymiz
     function onFormatChange() {
         if (appState.outputFilePath) {
             let selectedFormat = document.getElementById('formatSelect').value;
-            let newPath = changeExtension(appState.outputFilePath, selectedFormat);
+            let newPath = avoidInputPath(changeExtension(appState.outputFilePath, selectedFormat));
             appState.outputFilePath = newPath;
             document.getElementById('outputPath').value = newPath;
         } else {
@@ -861,6 +773,9 @@
                 
                 // Tarixga qo'shish
                 addToHistory(input, output, true);
+            } else if (result === "ERR_SAME_FILE") {
+                // Backend asl faylni ustidan yozishni rad etdi
+                showMsg(translations[lang]['title_warning'], translations[lang]['msg_same_file'], "warning");
             } else {
                 showMsg(translations[lang]['title_error'], result, "error");
                 addToHistory(input, output, false, result);
@@ -998,13 +913,15 @@
         renderHistory();
     }
 
-    // Tarix ro'yxatini generatsiya qilish
+    // Tarix ro'yxatini generatsiya qilish.
+    // Fayl nomlari va yo'llari foydalanuvchi ma'lumoti — ular hech qachon innerHTML yoki inline
+    // onclick ichiga qo'yilmaydi (apostrofli nomlar JS'ni buzmasligi va XSS bo'lmasligi uchun).
     function renderHistory() {
         const container = document.getElementById('historyContainer');
         const emptyText = document.getElementById('emptyHistoryText');
         const lang = appState.language;
         
-        container.innerHTML = '';
+        container.replaceChildren();
         
         if (appState.history.length === 0) {
             emptyText.classList.remove('hidden');
@@ -1017,31 +934,30 @@
             const el = document.createElement('div');
             el.className = "flex items-center justify-between gap-3 p-3 bg-slate-100/80 dark:bg-slate-900/35 border border-slate-200 dark:border-slate-900 rounded-xl hover:border-slate-300 dark:hover:border-slate-800 transition-all duration-200";
             
-            let statusBadge = item.success 
-                ? `<span class="text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded flex items-center gap-1 shrink-0"><span class="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400"></span>${translations[lang]['ok']}</span>` 
-                : `<span class="text-xs text-red-600 dark:text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded flex items-center gap-1 shrink-0"><span class="w-1.5 h-1.5 rounded-full bg-red-600 dark:bg-red-400"></span>${translations[lang]['error']}</span>`;
-                
+            // Statik belgilash (foydalanuvchi ma'lumotisiz); matnlar pastda textContent orqali qo'yiladi
             el.innerHTML = `
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2">
-                        <p class="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">${item.inputName}</p>
+                        <p data-field="input" class="text-xs font-bold text-slate-700 dark:text-slate-300 truncate"></p>
                         <span class="text-[10px] text-slate-400 dark:text-slate-600">→</span>
-                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">${item.outputName}</p>
+                        <p data-field="output" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate"></p>
                     </div>
-                    <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 leading-none">${translations[lang]['time']} ${item.time}</p>
+                    <p data-field="time" class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 leading-none"></p>
                 </div>
                 
-                <div class="flex items-center gap-2 shrink-0">
-                    ${statusBadge}
+                <div data-field="actions" class="flex items-center gap-2 shrink-0">
+                    ${item.success
+                        ? `<span class="text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded flex items-center gap-1 shrink-0"><span class="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400"></span><span data-field="status"></span></span>`
+                        : `<span class="text-xs text-red-600 dark:text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded flex items-center gap-1 shrink-0"><span class="w-1.5 h-1.5 rounded-full bg-red-600 dark:bg-red-400"></span><span data-field="status"></span></span>`}
                     
                     ${item.success ? `
-                        <button onclick="quickOpenFile('${item.outputPath.replace(/\\/g, '\\\\')}')" title="${translations[lang]['btn_open_file']}" 
+                        <button data-action="open" 
                                 class="p-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg border border-slate-300 dark:border-slate-700 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                             </svg>
                         </button>
-                        <button onclick="quickRevealFolder('${item.outputPath.replace(/\\/g, '\\\\')}')" title="${translations[lang]['btn_reveal_folder']}" 
+                        <button data-action="reveal" 
                                 class="p-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg border border-slate-300 dark:border-slate-700 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
@@ -1050,6 +966,26 @@
                     ` : ''}
                 </div>
             `;
+
+            el.querySelector('[data-field="input"]').textContent = item.inputName;
+            el.querySelector('[data-field="output"]').textContent = item.outputName;
+            el.querySelector('[data-field="time"]').textContent = `${translations[lang]['time']} ${item.time}`;
+            el.querySelector('[data-field="status"]').textContent = item.success ? translations[lang]['ok'] : translations[lang]['error'];
+            if (!item.success && item.error) {
+                el.title = item.error;
+            }
+
+            const openBtn = el.querySelector('[data-action="open"]');
+            if (openBtn) {
+                openBtn.title = translations[lang]['btn_open_file'];
+                openBtn.addEventListener('click', () => quickOpenFile(item.outputPath));
+            }
+            const revealBtn = el.querySelector('[data-action="reveal"]');
+            if (revealBtn) {
+                revealBtn.title = translations[lang]['btn_reveal_folder'];
+                revealBtn.addEventListener('click', () => quickRevealFolder(item.outputPath));
+            }
+
             container.appendChild(el);
         });
     }

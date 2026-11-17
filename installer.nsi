@@ -4,7 +4,8 @@
 !define OUT_FILE "build\bin\pandoc-pro-installer.exe"
 !define REG_UNINSTALL "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
 
-InstallDir "$PROGRAMFILES\PandocConvertPro"
+; 64-bitli ilova: "Program Files (x86)" emas, "Program Files" ga o'rnatiladi
+InstallDir "$PROGRAMFILES64\PandocConvertPro"
 
 Name "${APP_NAME}"
 OutFile "${OUT_FILE}"
@@ -14,6 +15,8 @@ Page Directory
 Page InstFiles
 
 Section "Install"
+    ; Yorliqlar barcha foydalanuvchilar uchun (HKLM ro'yxatiga mos)
+    SetShellVarContext all
     SetOutPath "$INSTDIR"
     
     ; Copy files
@@ -38,6 +41,7 @@ Section "Install"
 SectionEnd
 
 Section "Uninstall"
+    SetShellVarContext all
     Delete "$INSTDIR\pandoc-app.exe"
     Delete "$INSTDIR\pandoc.exe"
     Delete "$INSTDIR\uninstall.exe"

@@ -1,4 +1,5 @@
 //go:build windows
+
 package main
 
 import (
@@ -8,7 +9,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"syscall"
-	"time"
+
+	"golang.org/x/sys/windows"
 )
 
 // hideConsoleWindow hides the console window for a command on Windows.
@@ -19,84 +21,63 @@ func hideConsoleWindow(cmd *exec.Cmd) {
 	cmd.SysProcAttr.HideWindow = true
 }
 
+// openFilePlatform faylni standart dasturda ochadi.
+// ShellExecute to'g'ridan-to'g'ri chaqiriladi: "cmd /c start" ishlatilmaydi, shuning uchun
+// fayl nomidagi &, ^, | kabi belgilar buyruq sifatida talqin qilinmaydi.
 func openFilePlatform(filePath string) error {
-	cleanedPath := filepath.FromSlash(filePath)
-	cmd := exec.Command("cmd", "/c", "start", "", cleanedPath)
-	hideConsoleWindow(cmd)
-	return cmd.Start()
-}
-
-func revealInExplorerPlatform(filePath string) error {
-	cleanedPath := filepath.FromSlash(filePath)
-	cmd := exec.Command("explorer", "/select,", cleanedPath)
-	hideConsoleWindow(cmd)
-	return cmd.Start()
-}
-
-func convertHTMLToPDFPlatform(htmlPath string, pdfPath string) error {
-	edgePath := ""
-	paths := []string{
-		`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`,
-		`C:\Program Files\Microsoft\Edge\Application\msedge.exe`,
-		`C:\Program Files\Google\Chrome\Application\chrome.exe`,
-		`C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`,
-		`C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe`,
-	}
-	for _, p := range paths {
-		if _, err := os.Stat(p); err == nil {
-			edgePath = p
-			break
-		}
-	}
-
-	if edgePath == "" {
-		if p, err := exec.LookPath("msedge"); err == nil {
-			edgePath = p
-		} else if p, err := exec.LookPath("chrome"); err == nil {
-			edgePath = p
-		} else if p, err := exec.LookPath("brave"); err == nil {
-			edgePath = p
-		} else {
-			return fmt.Errorf("no headless browser found on Windows")
-		}
-	}
-
-	// Format local html file path as a file:// URL to handle spaces and special chars correctly
-	u := &url.URL{
-		Scheme: "file",
-		Path:   filepath.ToSlash(htmlPath),
-	}
-	htmlURL := u.String()
-
-	// Create a temporary directory for user data to isolate the process
-	tempDir, err := os.MkdirTemp("", "pandoc-pro-pdf-*")
+	cleanedPath := filepath.Clean(filepath.FromSlash(filePath))
+	verb, err := windows.UTF16PtrFromString("open")
 	if err != nil {
-		// Fallback without user-data-dir if temp dir creation fails
-		cmd := exec.Command(edgePath, "--headless", "--disable-gpu", "--no-sandbox", "--no-pdf-header-footer", "--print-to-pdf-no-header", "--print-to-pdf="+pdfPath, htmlURL)
-		hideConsoleWindow(cmd)
-		errRun := cmd.Run()
-		if errRun != nil {
-			return errRun
+		return err
+	}
+	file, err := windows.UTF16PtrFromString(cleanedPath)
+	if err != nil {
+		return err
+	}
+	return windows.ShellExecute(0, verb, file, nil, nil, windows.SW_SHOWNORMAL)
+}
+
+// revealInExplorerPlatform faylni Explorer'da belgilangan holda ko'rsatadi.
+func revealInExplorerPlatform(filePath string) error {
+	cleanedPath := filepath.Clean(filepath.FromSlash(filePath))
+	// explorer.exe argumentlarni o'ziga xos tarzda o'qiydi: /select,"yo'l" ko'rinishi kerak.
+	// Windows'da fayl nomida qo'shtirnoq (") bo'lishi mumkin emas, shuning uchun bu xavfsiz.
+	cmd := exec.Command("explorer.exe")
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		CmdLine: fmt.Sprintf(`explorer.exe /select,"%s"`, cleanedPath),
+	}
+	return cmd.Start()
+}
+
+// findHeadlessBrowser PDF yaratish uchun Chromium asosidagi brauzerni qidiradi.
+func findHeadlessBrowser() (string, error) {
+	var candidates []string
+	for _, env := range []string{"ProgramFiles(x86)", "ProgramFiles", "LocalAppData"} {
+		base := os.Getenv(env)
+		if base == "" {
+			continue
 		}
-	} else {
-		defer os.RemoveAll(tempDir)
-		cmd := exec.Command(edgePath, "--headless", "--disable-gpu", "--no-sandbox", "--no-first-run", "--no-default-browser-check", "--no-pdf-header-footer", "--print-to-pdf-no-header", "--user-data-dir="+tempDir, "--print-to-pdf="+pdfPath, htmlURL)
-		hideConsoleWindow(cmd)
-		errRun := cmd.Run()
-		if errRun != nil {
-			return errRun
+		candidates = append(candidates,
+			filepath.Join(base, `Microsoft\Edge\Application\msedge.exe`),
+			filepath.Join(base, `Google\Chrome\Application\chrome.exe`),
+			filepath.Join(base, `BraveSoftware\Brave-Browser\Application\brave.exe`),
+		)
+	}
+	for _, p := range candidates {
+		if _, err := os.Stat(p); err == nil {
+			return p, nil
 		}
 	}
-
-	// Because Edge launcher might exit immediately (process merging), we poll and wait for the PDF file to be created and contain data
-	for i := 0; i < 50; i++ {
-		if info, err := os.Stat(pdfPath); err == nil && info.Size() > 0 {
-			// Give it a tiny extra time to release file locks
-			time.Sleep(300 * time.Millisecond)
-			return nil
+	for _, name := range []string{"msedge", "chrome", "brave"} {
+		if p, err := exec.LookPath(name); err == nil {
+			return p, nil
 		}
-		time.Sleep(100 * time.Millisecond)
 	}
+	return "", fmt.Errorf("no headless browser found on Windows")
+}
 
-	return fmt.Errorf("timeout waiting for PDF generation by headless browser")
+// htmlFileURL Windows yo'lini to'g'ri file:///C:/... URL'ga aylantiradi (bo'shliq va maxsus belgilar kodlanadi).
+func htmlFileURL(path string) string {
+	u := &url.URL{Scheme: "file", Path: "/" + filepath.ToSlash(path)}
+	return u.String()
 }

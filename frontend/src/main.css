@@ -1,0 +1,86 @@
+/* Shriftlar npm orqali ilova ichiga joylanadi — internet talab qilinmaydi */
+@import '@fontsource/outfit/300.css';
+@import '@fontsource/outfit/400.css';
+@import '@fontsource/outfit/500.css';
+@import '@fontsource/outfit/600.css';
+@import '@fontsource/outfit/700.css';
+@import '@fontsource/outfit/800.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    font-family: 'Outfit', sans-serif;
+    background: radial-gradient(circle at top left, #f8fafc, #e2e8f0);
+    color: #0f172a;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+html.dark body {
+    background: radial-gradient(circle at top left, #0f172a, #020617);
+    color: #f1f5f9;
+}
+.code-font {
+    font-family: 'JetBrains Mono', monospace;
+}
+.glass {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px rgba(15, 23, 42, 0.08) solid;
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+html.dark .glass {
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px rgba(255, 255, 255, 0.08) solid;
+}
+.glass-inner {
+    background: rgba(241, 245, 249, 0.6);
+    border: 1px rgba(15, 23, 42, 0.05) solid;
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+html.dark .glass-inner {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px rgba(255, 255, 255, 0.05) solid;
+}
+.drop-glow {
+    box-shadow: 0 0 25px rgba(14, 165, 233, 0.15);
+}
+
+/* Wails fayl sudrab kelinganda drop-zona ustiga avtomatik shu klassni qo'shadi */
+#dropZone.wails-drop-target-active {
+    border-color: rgba(14, 165, 233, 0.7);
+    background-color: rgba(240, 249, 255, 0.5);
+    box-shadow: 0 0 25px rgba(14, 165, 233, 0.15);
+}
+html.dark #dropZone.wails-drop-target-active {
+    background-color: rgba(8, 47, 73, 0.1);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.1);
+}
+html.dark ::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.3);
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(14, 165, 233, 0.3);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(14, 165, 233, 0.5);
+}
+@keyframes pulse-slow {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.05); }
+}
+.status-pulse {
+    animation: pulse-slow 2s infinite ease-in-out;
+}

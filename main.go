@@ -17,14 +17,20 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:  "pandoc-app",
+		Title:  "Pandoc Pro Konverteri",
 		Width:  1024,
 		Height: 768,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
-		OnStartup:        app.startup,
+		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 255},
+		// Fayllarni oynaga sudrab tashlash: haqiqiy fayl yo'llari frontendga
+		// runtime.OnFileDrop orqali yetkaziladi (WebView'ning o'z drop'i o'chiriladi)
+		DragAndDrop: &options.DragAndDrop{
+			EnableFileDrop:     true,
+			DisableWebViewDrop: true,
+		},
+		OnStartup: app.startup,
 		Bind: []interface{}{
 			app,
 		},

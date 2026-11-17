@@ -47,16 +47,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev build-essential pkg-config
 
+      # go.mod dagi versiya bilan bir xil bo'lishi kerak
       - name: Install Wails CLI
-        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
 
       - name: Build Application (Windows)
         if: matrix.platform == 'windows'
         run: wails build -nopackage
 
+      # Universal binary: Apple Silicon (M1-M4) va Intel Mac'larda ishlaydi
       - name: Build Application (macOS)
         if: matrix.platform == 'macos'
-        run: wails build
+        run: wails build -platform darwin/universal
 
       - name: Build Application (Linux)
         if: matrix.platform == 'linux'
@@ -73,13 +75,19 @@ jobs:
           Get-ChildItem -Path "pandoc-extracted" -Filter "pandoc.exe" -Recurse | Copy-Item -Destination "build\bin\"
           & "C:\Program Files (x86)\NSIS\makensis.exe" installer.nsi
 
-      # macOS uchun Pandoc'ni yuklab olish va App bundle ichiga joylashtirib, zip qilish
+      # macOS uchun arm64 va x86_64 Pandoc'ni yuklab olib, bitta universal faylga birlashtirish (lipo)
       - name: Bundle Pandoc for macOS
         if: matrix.platform == 'macos'
         run: |
-          curl -L -o pandoc.zip "https://github.com/jgm/pandoc/releases/download/3.9/pandoc-3.9-arm64-macOS.zip"
-          unzip pandoc.zip -d pandoc-extracted
-          find pandoc-extracted -name pandoc -type f -exec cp {} build/bin/pandoc-app.app/Contents/MacOS/ \;
+          curl -fL -o pandoc-arm64.zip "https://github.com/jgm/pandoc/releases/download/3.9/pandoc-3.9-arm64-macOS.zip"
+          curl -fL -o pandoc-x86_64.zip "https://github.com/jgm/pandoc/releases/download/3.9/pandoc-3.9-x86_64-macOS.zip"
+          unzip -q pandoc-arm64.zip -d pandoc-arm64
+          unzip -q pandoc-x86_64.zip -d pandoc-x86_64
+          ARM_BIN=$(find pandoc-arm64 -path '*/bin/pandoc' -type f | head -n 1)
+          X86_BIN=$(find pandoc-x86_64 -path '*/bin/pandoc' -type f | head -n 1)
+          lipo -create -output build/bin/pandoc-app.app/Contents/MacOS/pandoc "$ARM_BIN" "$X86_BIN"
+          chmod +x build/bin/pandoc-app.app/Contents/MacOS/pandoc
+          lipo -info build/bin/pandoc-app.app/Contents/MacOS/pandoc
           cd build/bin
           zip -r ../../pandoc-pro-mac.zip pandoc-app.app
 
